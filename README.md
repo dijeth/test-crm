@@ -2,6 +2,19 @@
 
 Frontend starter for a serverless CRM built with React, TypeScript, Vite, Mantine, and Supabase.
 
+## Как устроена система
+
+Это система для учёта строительных объектов и работы по ним. На объектах создают задачи, назначают ответственных и отслеживают выполнение. В системе две роли: **постановщик (директор)** и **исполнитель**.
+
+Постановщик видит объекты и задачи все остальных постановщиков. Но может создавать объекты и управлять задачами только на своих объектах: создавать, редактировать, назначать исполнителя и удалять задачи. Редактировать и удалять задачу можно только если ее не взяли в работу. При этом постановщик может проверить задачу **на любом объекте**, даже чужом: принять её или вернуть на доработку, обязательно указав причину. Постановщик также видит историю изменений задач.
+
+Исполнитель видит только назначенные ему задачи и объекты, где есть такие задачи. Он может начать работу, отправить задачу на проверку и, если её вернули, снова взять её в работу. Он не может создавать или редактировать объекты и задачи, назначать исполнителей, удалять задачи, а также принимать или возвращать задачи на доработку.
+
+У каждой задачи есть текущий статус выполнения и история изменения статусов. Система контролирует все изменения статусов: кто может поменять, с какого на какой. Возможные изменения статусов задачи: **новая → в работе → на проверке → принята** или **на доработке → снова в работе** и т.д.
+При каждом изменении статуса система записывает, кто и когда его изменил. Записи истории нельзя исправить или удалить обычными действиями в системе, поэтому можно проследить весь ход работы над задачей.
+
+Доступ проверяется не только самим сайтом: правила действуют и на стороне базы данных, где хранятся сведения. Поэтому исполнитель не получит доступ к чужим задачам, даже если попытается обойти ограничения на экране или через браузерные скрипты. Каждый участник может менять только те данные и статусы, которые разрешены его роли.
+
 ## Run locally
 
 ```bash
@@ -14,19 +27,7 @@ Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in `.env.local`. The
 
 ## Supabase database and demo data
 
-Apply the SQL files in `supabase/migrations/` to your Supabase project in timestamp order:
-
-Apply `20261105160400_profiles_name_nullable.sql` first, then backfill names as described below. Only after every existing profile has a non-empty name, apply `20261105160500_profiles_name_not_null.sql` and the following migration.
-
-1. `20261105160000_schema.sql`
-2. `20261105160100_logic.sql`
-3. `20261105160200_rls.sql`
-4. `20261105160300_service_role_grants.sql`
-5. `20261105160400_profiles_name_nullable.sql`
-6. `20261105160500_profiles_name_not_null.sql` (after backfilling every existing profile)
-7. `20261105175400_profiles_history_author_names.sql`
-
-In the Supabase Dashboard, open **SQL Editor**, create a query for each file, paste its full contents, and run them in order. Wait for each query to succeed before running the next. Do not run these files against a project that already has the same schema.
+Apply the SQL files in `supabase/migrations/` to your Supabase project
 
 To create demo accounts and data, create `.env.seed.local` in the project root:
 
@@ -47,22 +48,6 @@ npm run seed
 ```
 
 The script creates two directors (`director1@crm.test`, `director2@crm.test`), five employees (`employee1@crm.test` through `employee5@crm.test`), three objects (two owned by the first director, one by the second), and five unassigned `new` tasks with descriptions per object. Demo profiles use the names “Директор 1/2” and “Исполнитель 1–5”. It is safe to rerun: existing users/profiles/objects are updated and existing seed tasks are not duplicated. Empty descriptions on matching seed tasks are filled; non-empty descriptions are preserved.
-
-To fill descriptions for seed tasks that already exist, run:
-
-```bash
-npm run tasks:backfill-descriptions
-```
-
-The script uses the service-role key from `.env.seed.local`, requires `SEED_CONFIRM_REMOTE=yes` for remote projects, and only updates seed tasks with an empty description.
-
-The profile-name migration initially allows existing profiles to remain without a name. Populate names before applying `20261105160500_profiles_name_not_null.sql`. To set names for existing users, add this value to `.env.seed.local` (JSON keys are Auth email addresses):
-
-```dotenv
-PROFILE_NAMES_JSON={"employee@example.com":"Name Surname","director@example.com":"Name Surname"}
-```
-
-Then run `npm run profiles:backfill-names`. The script uses the service-role key from `.env.seed.local`; remote projects require `SEED_CONFIRM_REMOTE=yes`. After every existing profile has a non-empty name, run `20261105160500_profiles_name_not_null.sql` in the SQL Editor.
 
 For the frontend, put the same project URL and publishable key in `.env.local` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, then start it:
 
