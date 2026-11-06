@@ -4,6 +4,7 @@ export type ObjectSummary = {
   id: string
   name: string
   address: string
+  creatorName: string | null
   taskCount: number
   completedTaskCount: number
 }

@@ -1,34 +1,44 @@
 import { requireSupabase } from './supabase'
 import type { ObjectDetails, ObjectSummary, ObjectTask } from './types'
 
-export async function getObjects(userId: string): Promise<ObjectSummary[]> {
+export async function getObjects(): Promise<ObjectSummary[]> {
   const client = requireSupabase()
   const { data: objects, error } = await client
     .from('objects')
-    .select('id, name, address')
-    .eq('owner_id', userId)
+    .select('id, name, address, owner_id')
     .order('created_at', { ascending: false })
   if (error) throw error
   if (objects.length === 0) return []
 
-  const { data: tasks, error: tasksError } = await client
-    .from('tasks')
-    .select('object_id, status')
-    .in('object_id', objects.map((object) => object.id))
-  if (tasksError) throw tasksError
+  const [tasksResult, profilesResult] = await Promise.all([
+    client
+      .from('tasks')
+      .select('object_id, status')
+      .in('object_id', objects.map((object) => object.id)),
+    client
+      .from('profiles')
+      .select('id, name')
+      .in('id', [...new Set(objects.map((object) => object.owner_id))]),
+  ])
+  if (tasksResult.error) throw tasksResult.error
+  if (profilesResult.error) throw profilesResult.error
 
   const counts = new Map<string, { total: number; completed: number }>()
-  for (const task of tasks) {
+  for (const task of tasksResult.data) {
     const current = counts.get(task.object_id) ?? { total: 0, completed: 0 }
     current.total += 1
     if (task.status === 'accepted') current.completed += 1
     counts.set(task.object_id, current)
   }
 
+  const namesById = new Map(profilesResult.data.map((profile) => [profile.id, profile.name]))
   return objects.map((object) => {
     const count = counts.get(object.id)
     return {
-      ...object,
+      id: object.id,
+      name: object.name,
+      address: object.address,
+      creatorName: namesById.get(object.owner_id) ?? null,
       taskCount: count?.total ?? 0,
       completedTaskCount: count?.completed ?? 0,
     }
@@ -102,5 +112,5 @@ export async function createObject(input: {
     .select('id, name, address')
     .single()
   if (error) throw error
-  return { ...data, taskCount: 0, completedTaskCount: 0 }
+  return { ...data, creatorName: null, taskCount: 0, completedTaskCount: 0 }
 }

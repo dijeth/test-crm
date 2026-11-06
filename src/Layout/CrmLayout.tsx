@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Alert, Anchor, Box, Button, Container, Group, Paper, Text } from '@mantine/core'
-import { Link, Outlet } from 'react-router-dom'
+import { Alert, Box, Button, Container, Group, Paper, Text } from '@mantine/core'
+import { Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useCurrentProfile } from '../queries/crm'
 import type { CrmRouteContext } from '../router/routeContext'
@@ -17,12 +17,6 @@ export function CrmLayout() {
     : profileQuery.data && !profileQuery.data.role
       ? 'Не удалось определить роль пользователя'
       : null
-  const links = role === 'director'
-    ? [{ to: '/objects', label: 'Объекты' }]
-    : role === 'employee'
-      ? [{ to: '/my-tasks', label: 'Мои задачи' }]
-      : []
-
   async function handleSignOut() {
     if (!supabase) return
     setSignOutError(null)
@@ -39,14 +33,7 @@ export function CrmLayout() {
       <Paper component="header" radius={0} withBorder px="md" py="sm">
         <Container size="lg">
           <Group justify="space-between">
-            <Group gap="lg">
-              <Text fw={700}>CRM</Text>
-              {links.map(({ to, label }) => (
-                <Anchor key={to} component={Link} to={to} c="dark" underline="never">
-                  {label}
-                </Anchor>
-              ))}
-            </Group>
+            <Text fw={700}>CRM</Text>
             <Group gap="sm">
               {profileName && <Text size="sm" fw={500}>{profileName}</Text>}
               <Button

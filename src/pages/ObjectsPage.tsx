@@ -74,11 +74,12 @@ export function ObjectsPage() {
       {createError && !modalOpened && <Alert color="red">{createError}</Alert>}
       {unavailable ? null : objectsQuery.isPending ? <Loader mx="auto" /> : (
         <Paper withBorder radius="md" style={{ overflowX: 'auto' }}>
-          <Table miw={620} striped highlightOnHover>
+          <Table miw={760} striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Объект</Table.Th>
                 <Table.Th>Адрес</Table.Th>
+                <Table.Th>Создал</Table.Th>
                 <Table.Th>Задачи/Завершенные</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -91,12 +92,13 @@ export function ObjectsPage() {
                     </Anchor>
                   </Table.Td>
                   <Table.Td>{object.address}</Table.Td>
+                  <Table.Td>{object.creatorName ?? '—'}</Table.Td>
                   <Table.Td>{object.taskCount}/{object.completedTaskCount}</Table.Td>
                 </Table.Tr>
               ))}
               {objects.length === 0 && !objectsQuery.error && (
                 <Table.Tr>
-                  <Table.Td colSpan={3}>
+                  <Table.Td colSpan={4}>
                     <Text c="dimmed" ta="center">Объектов пока нет</Text>
                   </Table.Td>
                 </Table.Tr>

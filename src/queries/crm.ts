@@ -13,7 +13,7 @@ export function useObjects() {
     queryKey: userId ? queryKeys.objects.list(userId) : queryKeys.objects.all,
     queryFn: () => {
       if (!userId) throw new Error('Не удалось определить пользователя')
-      return getObjects(userId)
+      return getObjects()
     },
     enabled: Boolean(supabase && userId),
   })
