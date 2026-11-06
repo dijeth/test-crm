@@ -1,0 +1,6 @@
+.git
+.env*
+.db-password.local
+.sentry-native
+node_modules
+dist
