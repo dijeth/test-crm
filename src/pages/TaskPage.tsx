@@ -41,7 +41,7 @@ export function TaskPage() {
         return
       }
       try {
-        if (employeesQuery.isStale) {
+        if (!employeesQuery.data || employeesQuery.isStale) {
           const result = await employeesQuery.refetch()
           if (result.error) throw result.error
         }
